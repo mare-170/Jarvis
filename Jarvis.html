@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="style.css">
+    <title>Jarvis</title>
+</head>
+<body>
+    <!-- <header></header> -->
+    <main>              
+        <div>
+            <input id="checkbox" type="checkbox" />
+            <label class="switch" for="checkbox">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="slider">
+                    <path
+                      d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32V256c0 17.7 14.3 32 32 32s32-14.3 32-32V32zM143.5 120.6c13.6-11.3 15.4-31.5 4.1-45.1s-31.5-15.4-45.1-4.1C49.7 115.4 16 181.8 16 256c0 132.5 107.5 240 240 240s240-107.5 240-240c0-74.2-33.8-140.6-86.6-184.6c-13.6-11.3-33.8-9.4-45.1 4.1s-9.4 33.8 4.1 45.1c38.9 32.3 63.5 81 63.5 135.4c0 97.2-78.8 176-176 176s-176-78.8-176-176c0-54.4 24.7-103.1 63.5-135.4z"
+                    ></path>
+                </svg>
+            </label>
+            
+        </div>
+        <div id="main">
+            <h1 class="title_name">Jarvis</h1>
+            <div class="toggle-cont">
+                <input class="toggle-input" id="toggle" name="toggle" type="checkbox" />
+                <label class="toggle-label" for="toggle">
+                  <div class="cont-label-play">
+                    <span class="label-play"></span>
+                  </div>
+                </label>
+              </div>
+
+            <p>Hello!Master</p>
+            <hr>
+            <div id="result-div" class="result-div">
+                <p id="transcript"><i style="color: #fff;">ご用件をどうぞ。</i></p>
+            </div>
+            <div id="jarvis-div"></div>
+            <!-- <audio id="audio_plater" controls> -->
+                <!-- <source id="audio-source" src="005_00.mp3" type="audio/mpeg"> -->
+            <!-- </audio> -->
+            <audio id="audio_player" src="005_00.mp3"></audio>
+        </div>
+        
+    </main>
+
+    <footer>
+        <p>&copy;kougaIndusty.com</p>
+    </footer>
+
+
+    <script>
+        // 初期設定
+        /*
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const transcriptTextarea = document.getElementById('transcript');
+        
+        let recognition = null;
+        */
+        const resultDiv = document.querySelector('#result-div');
+        let voice = "";
+        var textbox_element = document.getElementById("jarvis-div");
+        var replyText = "";
+        const music =  '005_00.mp3';
+
+
+        // ------------------------------------------------------
+        // 天気の初期設定
+       
+
+        
+
+        // --------------------------------------------------------
+        var checkbox = document.getElementById('checkbox');
+        var toggle   = document.getElementById('toggle');
+
+        // メイン画面の表示
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+
+                document.body.style.backgroundImage = "url('backImg.png')";
+                document.body.style.backgroundColer = "transparent";
+                document.getElementById("main").style.display = ""
+            } else {
+                document.body.style.backgroundImage = "none";
+                document.body.style.backgroundColor = "black";
+                document.getElementById('main').style.display = "none";
+            }
+        });
+
+        // 音声入力 
+
+        SpeechRecognition = webkitSpeechRecognition || SpeechRecognition;
+        let recognition = new SpeechRecognition();
+
+        recognition.lang = 'ja-JP';
+        recognition.interimResults = true;
+        recognition.continuous = true;
+
+        let finalTranscript = ''; // 確定した(黒の)認識結果
+
+        recognition.onresult = (event) => {
+            let interimTranscript = ''; // 暫定(灰色)の認識結果
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                let transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript = transcript;
+                    transcript = "";
+                } else {
+                    interimTranscript = transcript + '\n';
+                    transcript = "";
+                } 
+                console.log(finalTranscript);
+
+                // resultDiv.innerHTML = '<i style="color: #ddd">'+finalTranscript + '</i>' + '<i style="color:#dd0;">' + interimTranscript + '</i>';
+
+                resultDiv.innerHTML = '<i style="color:#dd0;">' + interimTranscript + '</i>';
+                if (interimTranscript == "") {
+                    var new_element = document.createElement("p");
+                    new_element.textContent = voice;
+                    console.log("voice:", voice);
+                    textbox_element.appendChild(new_element);
+                    interimTranscript = "";
+                    reply(voice);
+                    // read(replyText);
+                    voice = "";
+
+                } else {
+                    voice = interimTranscript;
+                    console.log('voiceProgress:',voice);
+                }
+            }  
+        }
+
+        toggle.addEventListener('change', function() {
+                if (this.checked) {  
+                    // this.disabled = true;                  
+                    recognition.start();
+                    console.log('音声認識を開始しました。');
+                    
+                } else {                    
+                    recognition.stop();
+                    console.log('音声認識を停止しました。');
+                    voice = "";
+
+                }
+        })
+
+
+        async function reply(voice) {
+            replayText = "";
+            temp = "";
+            var new_element = document.createElement("p");
+
+            if (voice.includes("ジャービス") || voice.includes("jarvis")) temp += "こんにちは";
+            if (voice.includes("天気")) { temp += await weather();}
+            if (voice.includes("何ができる")) temp += '天気をお伝え出来ます。';
+            if (voice.includes("ナイス") || voice.includes("ないす") || voice.includes("いいね") ) temp += "照れちゃうな！えへへ";
+            if (voice.includes('千里')|| voice.includes('ちさと')) {
+                temp += 'ちさと';
+                await play();
+            }
+
+            
+            if (temp !== "" || temp == 'ちさと') {
+                replyText = await temp;
+                console.log('temp',temp);
+                new_element.textContent += "Jarvis  >>"+temp;
+                console.log('jarvis>>',new_element);
+                // read(temp);        
+                textbox_element.appendChild(new_element);
+            }
+            
+
+            if (temp !== "" || temp == 'ちさと') {
+                await read(temp);
+                // toggle.disabled = false;
+            }
+
+        }
+
+        async function read(replyText) {
+            console.log('>>>>read');
+            const text = replyText;
+            console.log(text);
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ja-JP';
+            speechSynthesis.speak(utterance);
+        }
+
+        async function weather() {
+            const latitude = 36.0644; // 福井の緯度
+            const longitude = 136.2216; // 福井の経度
+            const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m`;
+
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`)
+                }
+                const data = await response.json();
+                const temperature = data.hourly.temperature_2m[0];//現在の気温
+                const time = new Date(data.hourly.time[0]).toLocaleString();//時間のフォーマット
+                return `福井の現在の気温は ${temperature}°C です。 時間: ${time}`;
+
+            } catch (error) {
+                console.error('Error fetching weather data:',error);
+                return "天気情報の取得に失敗しました。";
+            }          
+
+        }
+
+        async function play() {
+            const audio = document.getElementById('audio_player');
+            // const source = document.getElementById('audio-source');
+            // source.src = music;
+
+            
+            audio.play();
+            
+        }
+
+        /*
+
+        startBtn.onclick = () => {
+            console.log('strat');
+            recognition.start();
+        }
+        stopBtn.onclick = () => {
+            console.log('stop');
+            recognition.stop();
+            voice = "";
+        }
+        
+        */
+
+        // chatGPTのやつ
+        /*
+        if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+            SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'ja-JP'; // 言語を設定（日本語）
+            recognition.interimResults = true; // 途中結果を取得
+            recognition.continuous = true; // 連続音声認識
+
+            recognition.onstart = function() {
+                console.log('音声認識が開始されました。');
+            };
+
+            recognition.onresult = function(event) {
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    let transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                // 途中結果を表示
+                transcriptTextarea.value = interimTranscript;
+
+                // 最終的な結果を表示
+                if (finalTranscript.trim() !== '') {
+                    transcriptTextarea.value = finalTranscript;
+                }
+            };
+
+            recognition.onerror = function(event) {
+                console.error('音声認識エラー:', event.error);
+            };
+
+
+            toggle.addEventListener('change', function() {
+                if (this.checked) {
+                    if (!recognition) return;
+                    recognition.start();
+                    console.log('音声認識を開始しました。');
+                    
+                } else {
+                    if (!recognition) return;
+                    recognition.stop();
+                    console.log('音声認識を停止しました。');
+
+                }
+            })
+
+
+            /*
+            startBtn.addEventListener('click', function() {
+                if (!recognition) return;
+                recognition.start();
+                console.log('音声認識を開始しました。');
+            });
+
+            stopBtn.addEventListener('click', function() {
+                if (!recognition) return;
+                recognition.stop();
+                console.log('音声認識を停止しました。');
+            });
+            
+
+        } else {
+            console.error('このブラウザでは音声認識がサポートされていません。');
+            alert('このブラウザでは音声認識がサポートされていません。');
+        }
+        
+        */
+    </script>
+    
+</body>
+</html>
